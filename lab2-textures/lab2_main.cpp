@@ -93,7 +93,7 @@ void initGL()
 	};
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
 	// The loadShaderProgram and linkShaderProgam functions are defined in glutil.cpp and
@@ -112,7 +112,7 @@ void initGL()
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
-	image = stbi_load("../scenes/explosion.png", &w, &h, &comp, STBI_rgb_alpha);
+	image = stbi_load("../scenes/get-shrekd.png", &w, &h, &comp, STBI_rgb_alpha);
 	glGenTextures(1, &explosionTexture);
 	glBindTexture(GL_TEXTURE_2D, explosionTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
@@ -148,12 +148,19 @@ void initGL()
 	glGenVertexArrays(1, &explosionVAO);
 	glBindVertexArray(explosionVAO);
 
-	float explosion_positions[] = {
+	/*float explosion_positions[] = {
 		-10.0f, 1.0f,  -30.0f,
 		-10.0f, 20.0f,  -30.0f,
 		10.0f, 20.0f,  -30.0f,
 		10.0f, 1.0f,  -30.0f,
+	};*/
+	float explosion_positions[] = {
+		-30.0f, -10.0f,  -80.0f,
+		-30.0f, 15.0f,  -80.0f,
+		30.0f, 15.0f,  -80.0f,
+		30.0f, -10.0f,  -80.0f,
 	};
+
 	glGenBuffers(1, &explosionPositionBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, explosionPositionBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(explosion_positions), explosion_positions, GL_STATIC_DRAW);
@@ -166,6 +173,8 @@ void initGL()
 		1.0f, 1.0f, // (u,v) for v2
 		1.0f, 0.0f // (u,v) for v3
 	};
+
+	
 
 	glGenBuffers(1, &explosionUvBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, explosionUvBuffer);
