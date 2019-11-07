@@ -50,7 +50,15 @@ bool showUI = false;
 Model* cityModel = nullptr;
 Model* carModel = nullptr;
 Model* groundModel = nullptr;
+//mat4 carModelMatrix(
+	//1,0,0,0,
+	//0,1,0,0,
+	//0,0,1,0,
+	////tx, ty, tz, 1
+	//10,0,-13,1
+//);
 mat4 carModelMatrix(1.0f);
+
 
 vec3 worldUp = vec3(0.0f, 1.0f, 0.0f);
 
@@ -67,6 +75,7 @@ void loadModels()
 	cityModel = loadModelFromOBJ("../scenes/city.obj");
 	carModel = loadModelFromOBJ("../scenes/car.obj");
 	groundModel = loadModelFromOBJ("../scenes/ground_plane.obj");
+	carModelMatrix[3] = vec4(10, 0, -13, 1);	//modify last column to translate tx, ty, tz, 1
 }
 
 void drawGround(mat4 mvpMatrix)
@@ -255,21 +264,27 @@ int main(int argc, char* argv[])
 		const uint8_t* state = SDL_GetKeyboardState(nullptr);
 
 		// implement camera controls based on key states
+		const float speed = 10.0f;
+		const float rotateSpeed = 2.f;
 		if(state[SDL_SCANCODE_UP])
 		{
 			printf("Key Up is pressed down\n");
+			carModelMatrix[3] += speed * deltaTime * vec4(0, 0, 1, 0);
 		}
 		if(state[SDL_SCANCODE_DOWN])
 		{
 			printf("Key Down is pressed down\n");
+			carModelMatrix[3] -= speed * deltaTime * vec4(0, 0, 1, 0);
 		}
 		if(state[SDL_SCANCODE_LEFT])
 		{
 			printf("Key Left is pressed down\n");
+			carModelMatrix[3] += speed * deltaTime * vec4(1, 0, 0, 0);
 		}
 		if(state[SDL_SCANCODE_RIGHT])
 		{
 			printf("Key Right is pressed down\n");
+			carModelMatrix[3] -= speed * deltaTime * vec4(1, 0, 0, 0);
 		}
 	}
 
