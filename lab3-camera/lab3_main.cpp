@@ -58,14 +58,14 @@ Model* groundModel = nullptr;
 	//10,0,-13,1
 //);
 mat4 carModelMatrix(1.0f);
-
+mat4 secondCarModelMatrix(1.0f);
 
 vec3 worldUp = vec3(0.0f, 1.0f, 0.0f);
 
 // Camera parameters
 vec3 cameraPosition(15.0f, 15.0f, 15.0f);
 vec3 cameraDirection(-1.0f, -1.0f, -1.0f);
-mat4 T(1.0f), R(1.0f);
+mat4 T(1.0f), R(1.0f), T2(1.0f), R2(1.0f);
 
 void loadModels()
 {
@@ -149,6 +149,10 @@ void display()
 	glUniformMatrix4fv(loc, 1, false, &modelViewProjectionMatrix[0].x);
 	render(carModel);
 
+	carModelMatrix = 
+	modelViewProjectionMatrix = projectionMatrix * viewMatrix * secondCarModelMatrix;
+	glUniformMatrix4fv(loc, 1, false, &modelViewProjectionMatrix[0].x);
+	render(carModel);
 
 	glUseProgram(0);
 }
@@ -293,6 +297,11 @@ int main(int argc, char* argv[])
 		R[2] = vec4(cross(vec3(R[0]), vec3(R[1])), 0.0f);
 
 		carModelMatrix = T * R;
+		
+		T2 = translate(vec3(0, 0, 1) * speed * deltaTime);
+		R2 = rotate((float)radians(rotateSpeed), vec3(0, 1, 0));
+
+		secondCarModelMatrix *= T2 * R2;
 	}
 
 	// Shut down everything. This includes the window and all other subsystems.
