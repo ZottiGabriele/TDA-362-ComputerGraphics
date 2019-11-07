@@ -122,6 +122,13 @@ void display()
 	                               1.00000000f);
 	mat4 viewMatrix = constantViewMatrix;
 
+	vec3 cameraRight = normalize(cross(cameraDirection, worldUp));
+	vec3 cameraUp = normalize(cross(cameraRight, cameraDirection));
+
+	mat3 cameraBaseVectorsWorldSpace(cameraRight, cameraUp, -cameraDirection);
+	mat4 cameraRotation = mat4(transpose(cameraBaseVectorsWorldSpace));
+	viewMatrix = cameraRotation * translate(-cameraPosition);
+
 	// Setup the projection matrix
 	if(w != old_w || h != old_h)
 	{
@@ -261,6 +268,11 @@ int main(int argc, char* argv[])
 				}
 				g_prevMouseCoords.x = event.motion.x;
 				g_prevMouseCoords.y = event.motion.y;
+
+				float rotationSpeed = 0.005f;
+				mat4 yaw = rotate(rotationSpeed * -delta_x, worldUp);
+				mat4 pitch = rotate(rotationSpeed * -delta_y, normalize(cross(cameraDirection, worldUp)));
+				cameraDirection = vec3(pitch * yaw * vec4(cameraDirection, 0.0f));
 			}
 		}
 
@@ -290,6 +302,24 @@ int main(int argc, char* argv[])
 		{
 			printf("Key Right is pressed down\n");
 			R[0] += rotateSpeed * deltaTime * R[2];
+		}
+		if (state[SDL_SCANCODE_W]) 
+		{
+			printf("Key W is pressed down\n");
+			cameraPosition += speed * deltaTime * cameraDirection;
+		}
+		if (state[SDL_SCANCODE_S])
+		{
+			printf("Key W is pressed down\n");
+			cameraPosition -= speed * deltaTime * cameraDirection;
+		}
+		if (state[SDL_SCANCODE_D])
+		{
+			printf("Key W is pressed down\n");
+		}
+		if (state[SDL_SCANCODE_A])
+		{
+			printf("Key W is pressed down\n");
 		}
 
 		// Make R orthonormal again
