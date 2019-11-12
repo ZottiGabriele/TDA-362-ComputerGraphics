@@ -65,6 +65,8 @@ vec3 worldUp = vec3(0.0f, 1.0f, 0.0f);
 // Camera parameters
 vec3 cameraPosition(15.0f, 15.0f, 15.0f);
 vec3 cameraDirection(-1.0f, -1.0f, -1.0f);
+vec3 cameraRight;
+vec3 cameraUp;
 mat4 T(1.0f), R(1.0f), T2(1.0f), R2(1.0f);
 
 void loadModels()
@@ -122,8 +124,8 @@ void display()
 	                               1.00000000f);
 	mat4 viewMatrix = constantViewMatrix;
 
-	vec3 cameraRight = normalize(cross(cameraDirection, worldUp));
-	vec3 cameraUp = normalize(cross(cameraRight, cameraDirection));
+	cameraRight = normalize(cross(cameraDirection, worldUp));
+	cameraUp = normalize(cross(cameraRight, cameraDirection));
 
 	mat3 cameraBaseVectorsWorldSpace(cameraRight, cameraUp, -cameraDirection);
 	mat4 cameraRotation = mat4(transpose(cameraBaseVectorsWorldSpace));
@@ -315,11 +317,23 @@ int main(int argc, char* argv[])
 		}
 		if (state[SDL_SCANCODE_D])
 		{
-			printf("Key W is pressed down\n");
+			printf("Key D is pressed down\n");
+			cameraPosition += speed * deltaTime * cameraRight;
 		}
 		if (state[SDL_SCANCODE_A])
 		{
-			printf("Key W is pressed down\n");
+			printf("Key A is pressed down\n");
+			cameraPosition -= speed * deltaTime * cameraRight;
+		}
+		if (state[SDL_SCANCODE_SPACE])
+		{
+			printf("Key SPACE is pressed down\n");
+			cameraPosition += speed * deltaTime * worldUp;
+		}
+		if (state[SDL_SCANCODE_LCTRL])
+		{
+			printf("Key LCTRL is pressed down\n");
+			cameraPosition -= speed * deltaTime * worldUp;
 		}
 
 		// Make R orthonormal again
