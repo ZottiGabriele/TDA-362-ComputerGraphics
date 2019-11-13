@@ -31,7 +31,7 @@ struct PerspectiveParams
 	float far;
 };
 
-PerspectiveParams pp = { 45.0f, 1280, 720, 0.1f, 300.0f };
+PerspectiveParams pp = { 45.0f, 1280, 720, 2.4f, 300.0f };
 
 // The window we'll be rendering to
 SDL_Window* g_window = nullptr;
@@ -151,7 +151,7 @@ void display()
 
 	// Ground
 	// Task 5: Uncomment this
-	//drawGround(modelViewProjectionMatrix);
+	drawGround(modelViewProjectionMatrix);
 
 	// car
 	modelViewProjectionMatrix = projectionMatrix * viewMatrix * carModelMatrix;
