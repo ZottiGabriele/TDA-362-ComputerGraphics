@@ -99,10 +99,40 @@ void initFullScreenQuad()
 	///////////////////////////////////////////////////////////////////////////
 	// initialize the fullScreenQuadVAO for drawFullScreenQuad
 	///////////////////////////////////////////////////////////////////////////
+	
 	if(fullScreenQuadVAO == 0)
 	{
 		// >>> @task 4.1
 		// ...
+		glGenVertexArrays(1, &fullScreenQuadVAO);
+		glBindVertexArray(fullScreenQuadVAO);
+
+		GLuint positionsBuffer, trisBuffer;
+
+		float positions[] = {
+			-1,-1,
+			 1,-1,
+			 1, 1,
+			-1, 1,
+		};
+
+		int tris[] = {
+			0, 1, 2,
+			0, 2, 3,
+		};
+
+		//Initialize positionBuffer and copy data
+		glCreateBuffers(1, &positionsBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, positionsBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//Initialize trisBuffer and copy data
+		glCreateBuffers(1, &trisBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, trisBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(tris), tris, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, trisBuffer);
 	}
 }
 
@@ -116,6 +146,10 @@ void drawFullScreenQuad()
 	///////////////////////////////////////////////////////////////////////////
 	// >>> @task 4.2
 	// ...
+	glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(fullScreenQuadVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -257,6 +291,12 @@ void display(void)
 	// Task 4.3 - Render a fullscreen quad, to generate the background from the
 	//            environment map.
 	///////////////////////////////////////////////////////////////////////////
+	glUseProgram(backgroundProgram);
+	labhelper::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
+	labhelper::setUniformSlow(backgroundProgram, "inv_PV", inverse(projectionMatrix * viewMatrix));
+	labhelper::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
+	drawFullScreenQuad();
+
 
 	///////////////////////////////////////////////////////////////////////////
 	// Render the .obj models
