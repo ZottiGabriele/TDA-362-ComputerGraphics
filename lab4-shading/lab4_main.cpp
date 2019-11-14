@@ -147,6 +147,7 @@ void drawFullScreenQuad()
 	// >>> @task 4.2
 	// ...
 	glDisable(GL_DEPTH_TEST);
+	
 	glBindVertexArray(fullScreenQuadVAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glEnable(GL_DEPTH_TEST);
