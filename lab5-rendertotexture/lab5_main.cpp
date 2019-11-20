@@ -358,6 +358,11 @@ void display()
 	glUseProgram(postFxShader);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, postFxFB.colorTextureTarget);
+
+	labhelper::setUniformSlow(postFxShader, "time", currentTime);
+	labhelper::setUniformSlow(postFxShader, "currentEffect", currentEffect);
+	labhelper::setUniformSlow(postFxShader, "filterSize", filterSizes[filterSize - 1]);
+
 	labhelper::drawFullScreenQuad();
 
 	glUseProgram(0);
