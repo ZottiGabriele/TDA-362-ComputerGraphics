@@ -140,8 +140,8 @@ vec2 mosaic(vec2 inCoord) {
 	float mod_y = mod(inCoord.y, mosaic_size);
 
 	//								[	Magic (?)	]
-	outCoord.x = outCoord.x - mod_x + mosaic_size / 2;
-	outCoord.y = outCoord.y - mod_y + mosaic_size / 2;
+	outCoord.x = outCoord.x - mod_x + 0.5;//mosaic_size / 2;
+	outCoord.y = outCoord.y - mod_y + 0.5;//mosaic_size / 2;
 
 	return outCoord;
 }
