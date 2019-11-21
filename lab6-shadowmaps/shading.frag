@@ -22,6 +22,7 @@ layout(binding = 5) uniform sampler2D emissiveMap;
 layout(binding = 6) uniform sampler2D environmentMap;
 layout(binding = 7) uniform sampler2D irradianceMap;
 layout(binding = 8) uniform sampler2D reflectionMap;
+layout(binding = 10) uniform sampler2D shadowMapTex;
 uniform float environment_multiplier;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,6 +40,7 @@ uniform float point_light_intensity_multiplier = 50.0;
 // Input varyings from vertex shader
 ///////////////////////////////////////////////////////////////////////////////
 in vec2 texCoord;
+in vec4 shadowMapCoord;
 in vec3 viewSpaceNormal;
 in vec3 viewSpacePosition;
 
@@ -46,6 +48,7 @@ in vec3 viewSpacePosition;
 // Input uniform variables
 ///////////////////////////////////////////////////////////////////////////////
 uniform mat4 viewInverse;
+uniform mat4 lightMatrix;
 uniform vec3 viewSpaceLightPosition;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,9 +118,12 @@ void main()
 	float visibility = 1.0;
 	float attenuation = 1.0;
 
-
 	vec3 wo = -normalize(viewSpacePosition);
 	vec3 n = normalize(viewSpaceNormal);
+
+	//shadows
+	float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
+	visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
 
 	// Direct illumination
 	vec3 direct_illumination_term = visibility * calculateDirectIllumiunation(wo, n);
