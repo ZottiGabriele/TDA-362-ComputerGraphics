@@ -49,7 +49,11 @@ in vec3 viewSpacePosition;
 ///////////////////////////////////////////////////////////////////////////////
 uniform mat4 viewInverse;
 uniform mat4 lightMatrix;
+uniform float spotOuterAngle;
+uniform float spotInnerAngle;
+uniform vec3 viewSpaceLightDir;
 uniform vec3 viewSpaceLightPosition;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output color
@@ -124,6 +128,17 @@ void main()
 	//shadows
 	float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
 	visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
+
+	vec3 posToLight = normalize(viewSpaceLightPosition - viewSpacePosition);
+	float cosAngle = dot(posToLight, -viewSpaceLightDir);
+
+	// Spotlight with hard border:
+	//float spotAttenuation = (cosAngle > spotOuterAngle) ? 1.0 : 0.0;
+
+	// Spotlight with soft border
+	float spotAttenuation = smoothstep(spotOuterAngle, spotInnerAngle, cosAngle);
+
+	visibility *= spotAttenuation;
 
 	// Direct illumination
 	vec3 direct_illumination_term = visibility * calculateDirectIllumiunation(wo, n);
