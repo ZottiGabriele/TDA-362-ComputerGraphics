@@ -22,7 +22,8 @@ layout(binding = 5) uniform sampler2D emissiveMap;
 layout(binding = 6) uniform sampler2D environmentMap;
 layout(binding = 7) uniform sampler2D irradianceMap;
 layout(binding = 8) uniform sampler2D reflectionMap;
-layout(binding = 10) uniform sampler2D shadowMapTex;
+layout(binding = 10) uniform sampler2DShadow shadowMapTex;
+//layout(binding = 10) uniform sampler2D shadowMapTex;
 uniform float environment_multiplier;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,8 +127,9 @@ void main()
 	vec3 n = normalize(viewSpaceNormal);
 
 	//shadows
-	float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
-	visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
+	//float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
+	//visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
+	visibility = textureProj( shadowMapTex, shadowMapCoord );
 
 	vec3 posToLight = normalize(viewSpaceLightPosition - viewSpacePosition);
 	float cosAngle = dot(posToLight, -viewSpaceLightDir);
