@@ -79,6 +79,7 @@ float polygonOffset_units = 1.0f;
 ///////////////////////////////////////////////////////////////////////////////
 FboInfo depth_buffer, normal_buffer;
 int SSAO_sample_count = 10;
+bool render_normals = true;
 std::vector<vec3> SSAO_samples;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,13 +276,19 @@ void display(void)
 	//show depth buffer on screens
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer.framebufferId);
 	glViewport(0, 0, depth_buffer.width, depth_buffer.height);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawScene(SSAO_input_program, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
 
 	labhelper::Material& screen = landingpadModel->m_materials[8];
-	screen.m_emission_texture.gl_id = depth_buffer.colorTextureTargets[0];
+	
+	if (render_normals) {
+		screen.m_emission_texture.gl_id = depth_buffer.colorTextureTargets[0];
+	}
+	else {
+		screen.m_emission_texture.gl_id = depth_buffer.depthBuffer;
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// Set up shadow map parameters
@@ -293,19 +300,10 @@ void display(void)
 	///////////////////////////////////////////////////////////////////////////
 	// Draw Shadow Map
 	///////////////////////////////////////////////////////////////////////////
-	//if (shadowMapClampMode == ClampMode::Edge) {
-		glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//}
+	glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	/*if (shadowMapClampMode == ClampMode::Border) {
-		glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		vec4 border(shadowMapClampBorderShadowed ? 0.f : 1.f);
-		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &border.x);
-	}*/
 
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFB.framebufferId);
 	glViewport(0, 0, shadowMapFB.width, shadowMapFB.height);
@@ -418,6 +416,7 @@ void gui()
 	// ----------------- Set variables --------------------------
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
 	            ImGui::GetIO().Framerate);
+	ImGui::Checkbox("Render Normals", &render_normals);
 	// ----------------------------------------------------------
 	// Render the GUI.
 	ImGui::Render();
