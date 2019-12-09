@@ -48,6 +48,8 @@ bool g_isMouseDragging = false;
 GLuint shaderProgram;       // Shader for rendering the final image
 GLuint simpleShaderProgram; // Shader used to draw the shadow map
 GLuint backgroundProgram;
+GLuint SSAO_input_program;  // Shader for ??
+GLuint SSAO_output_program; // Shader used to ??
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -71,6 +73,13 @@ FboInfo shadowMapFB;
 int shadowMapResolution = 1024;
 float polygonOffset_factor = 2.5f;
 float polygonOffset_units = 1.0f;
+
+///////////////////////////////////////////////////////////////////////////////
+// SSAO parameters
+///////////////////////////////////////////////////////////////////////////////
+FboInfo depth_buffer, normal_buffer;
+int SSAO_sample_count = 10;
+std::vector<vec3> SSAO_samples;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Camera parameters.
@@ -116,6 +125,8 @@ void initGL()
 	                                                 "../project/background.frag");
 	shaderProgram = labhelper::loadShaderProgram("../project/shading.vert", "../project/shading.frag");
 	simpleShaderProgram = labhelper::loadShaderProgram("../project/simple.vert", "../project/simple.frag");
+	SSAO_input_program = labhelper::loadShaderProgram("../project/ssaoInput.vert", "../project/ssaoInput.frag");
+	SSAO_output_program = labhelper::loadShaderProgram("../project/ssaoOutput.vert", "../project/ssaoOutput.frag");
 
 	///////////////////////////////////////////////////////////////////////
 	// Load models and set up model matrices
@@ -147,6 +158,10 @@ void initGL()
 	glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+	//Set SSAO samples for shaders
+	glUseProgram(SSAO_input_program);
+	labhelper::setUniformSlow(SSAO_input_program, "samples", SSAO_sample_count, SSAO_samples.data());
 
 	glEnable(GL_DEPTH_TEST); // enable Z-buffering
 	glEnable(GL_CULL_FACE);  // enables backface culling
@@ -219,7 +234,6 @@ void drawScene(GLuint currentShaderProgram,
 	labhelper::render(fighterModel);
 }
 
-
 void display(void)
 {
 	///////////////////////////////////////////////////////////////////////////
@@ -232,6 +246,7 @@ void display(void)
 		{
 			windowWidth = w;
 			windowHeight = h;
+			depth_buffer.resize(w, h);
 		}
 	}
 
@@ -257,6 +272,16 @@ void display(void)
 	glBindTexture(GL_TEXTURE_2D, reflectionMap);
 	glActiveTexture(GL_TEXTURE0);
 
+	//show depth buffer on screens
+	glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer.framebufferId);
+	glViewport(0, 0, depth_buffer.width, depth_buffer.height);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	drawScene(SSAO_input_program, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
+
+	labhelper::Material& screen = landingpadModel->m_materials[8];
+	screen.m_emission_texture.gl_id = depth_buffer.colorTextureTargets[0];
 
 	///////////////////////////////////////////////////////////////////////////
 	// Set up shadow map parameters
@@ -294,7 +319,6 @@ void display(void)
 	drawScene(simpleShaderProgram, lightViewMatrix, lightProjMatrix, lightViewMatrix, lightProjMatrix);
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	
 
 	///////////////////////////////////////////////////////////////////////////
 	// Draw from camera
@@ -307,9 +331,6 @@ void display(void)
 	drawBackground(viewMatrix, projMatrix);
 	drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
 	debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
-
-
-
 }
 
 bool handleEvents(void)
@@ -378,13 +399,13 @@ bool handleEvents(void)
 	{
 		cameraPosition += cameraSpeed * deltaTime * cameraRight;
 	}
-	if(state[SDL_SCANCODE_Q])
-	{
-		cameraPosition -= cameraSpeed * deltaTime * worldUp;
-	}
-	if(state[SDL_SCANCODE_E])
+	if(state[SDL_SCANCODE_SPACE])
 	{
 		cameraPosition += cameraSpeed * deltaTime * worldUp;
+	}
+	if(state[SDL_SCANCODE_LSHIFT])
+	{
+		cameraPosition -= cameraSpeed * deltaTime * worldUp;
 	}
 	return quitEvent;
 }
@@ -405,6 +426,12 @@ void gui()
 int main(int argc, char* argv[])
 {
 	g_window = labhelper::init_window_SDL("OpenGL Project");
+
+	//Generate hemisphere samples for SSAO
+	for (int i = 0; i < SSAO_sample_count; ++i) {
+		vec3 sample = labhelper::cosineSampleHemisphere() * labhelper::randf();
+		SSAO_samples.push_back(sample);
+	}
 
 	initGL();
 
