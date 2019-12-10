@@ -77,7 +77,7 @@ float polygonOffset_units = 1.0f;
 ///////////////////////////////////////////////////////////////////////////////
 // SSAO parameters
 ///////////////////////////////////////////////////////////////////////////////
-FboInfo depth_buffer, normal_buffer;
+FboInfo normals_buffer, pre_SSAO_buffer;
 int SSAO_sample_count = 10;
 bool render_normals = true;
 std::vector<vec3> SSAO_samples;
@@ -162,7 +162,7 @@ void initGL()
 
 	//Set SSAO samples for shaders
 	glUseProgram(SSAO_input_program);
-	labhelper::setUniformSlow(SSAO_input_program, "samples", SSAO_sample_count, SSAO_samples.data());
+	labhelper::setUniformSlow(SSAO_output_program, "samples", SSAO_sample_count, SSAO_samples.data());
 
 	glEnable(GL_DEPTH_TEST); // enable Z-buffering
 	glEnable(GL_CULL_FACE);  // enables backface culling
@@ -247,7 +247,8 @@ void display(void)
 		{
 			windowWidth = w;
 			windowHeight = h;
-			depth_buffer.resize(w, h);
+			pre_SSAO_buffer.resize(w, h);
+			normals_buffer.resize(w, h);
 		}
 	}
 
@@ -273,21 +274,23 @@ void display(void)
 	glBindTexture(GL_TEXTURE_2D, reflectionMap);
 	glActiveTexture(GL_TEXTURE0);
 
-	//show depth buffer on screens
-	glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer.framebufferId);
-	glViewport(0, 0, depth_buffer.width, depth_buffer.height);
+	///////////////////////////////////////////////////////////////////////////
+	// Draw from camera to normal and depth buffer
+	///////////////////////////////////////////////////////////////////////////
+	glBindFramebuffer(GL_FRAMEBUFFER, normals_buffer.framebufferId);
+	glViewport(0, 0, normals_buffer.width, normals_buffer.height);
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawScene(SSAO_input_program, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
 
+	// show depth output on screens
 	labhelper::Material& screen = landingpadModel->m_materials[8];
-	
 	if (render_normals) {
-		screen.m_emission_texture.gl_id = depth_buffer.colorTextureTargets[0];
+		screen.m_emission_texture.gl_id = normals_buffer.colorTextureTargets[0];
 	}
 	else {
-		screen.m_emission_texture.gl_id = depth_buffer.depthBuffer;
+		screen.m_emission_texture.gl_id = normals_buffer.depthBuffer;
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -319,9 +322,9 @@ void display(void)
 	glDisable(GL_POLYGON_OFFSET_FILL);
 
 	///////////////////////////////////////////////////////////////////////////
-	// Draw from camera
+	// Draw from camera to a buffer
 	///////////////////////////////////////////////////////////////////////////
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, pre_SSAO_buffer.framebufferId);
 	glViewport(0, 0, windowWidth, windowHeight);
 	glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -329,6 +332,28 @@ void display(void)
 	drawBackground(viewMatrix, projMatrix);
 	drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
 	debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
+
+	///////////////////////////////////////////////////////////////////////////
+	// Post processing pass(es)
+	///////////////////////////////////////////////////////////////////////////
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, windowWidth, windowHeight);
+	glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(SSAO_output_program);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, pre_SSAO_buffer.colorTextureTargets[0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, normals_buffer.colorTextureTargets[0]);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, normals_buffer.depthBuffer);
+
+	labhelper::setUniformSlow(SSAO_output_program, "inverseProjectionMatrix", inverse(projMatrix));
+	labhelper::setUniformSlow(SSAO_output_program, "projectionMatrix", projMatrix);
+	labhelper::setUniformSlow(SSAO_output_program, "nof_samples", SSAO_sample_count);
+	labhelper::setUniformSlow(SSAO_output_program, "hemisphere_radius", 10);
+
+	labhelper::drawFullScreenQuad();
 }
 
 bool handleEvents(void)
