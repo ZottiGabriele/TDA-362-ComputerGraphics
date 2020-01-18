@@ -1,7 +1,7 @@
 # Description
-This is the repository for the tutorials of the course TDA362/DIT223 Computer Graphics given at Chalmers University of
-Technology 2019. It contains resources and skeleton code which is to be filled in by students in six different lab assignments and one larger project. 
+This is the repository for the lab exercises and the final project of the course TDA362/DIT223 Computer Graphics given at Chalmers University of
+Technology 2019.
 
-The accompanying web page to this repository is located at http://www.cse.chalmers.se/edu/course/TDA362/tutorials/index.html.
+For the final project I've chosen to implement real time Screen Space Ambient Occlusion in OpenGL.
 
-Instructions on how to use this repository specifically can be found at http://www.cse.chalmers.se/edu/course/TDA362/tutorials/start.html.
+The course web page is located at http://www.cse.chalmers.se/edu/course/TDA362/tutorials/index.html.
